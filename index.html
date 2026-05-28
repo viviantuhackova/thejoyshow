@@ -341,8 +341,8 @@
                 }
             }
 
-            const cisteJmeno = jmeno.normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 40);
-            const zpravaProPrijemce = `${cisteJmeno} listky JOY show`;
+            // Oprava: Bezpečné ošetření textu zprávy pro QR kód, které už nezkolabuje
+            const zpravaProPrijemce = jmeno.substring(0, 20) + " listky JOY show";
 
             const qrText = `SPD*1.0*ACC:${IBAN}*AM:${celkovaCena}.00*CC:CZK*MSG:${zpravaProPrijemce}`;
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrText)}`;
