@@ -111,7 +111,6 @@
                 for (let i = 1; i <= pocetStani; i++) {
                     const ticket = document.createElement('div');
                     ticket.className = 'ticket-template';
-                    // Modré bezpečnostní pruhy proti padělání pro lístek na stání
                     ticket.innerHTML = `
                         <div class="ticket-header" style="color: #3b82f6; border-bottom-color: #3b82f6;">🎟️ THE JOY SHOW 2026 🎟️</div>
                         <div class="ticket-body">
@@ -177,7 +176,7 @@
                 const data = documentSnapshot.data();
                 const jeStani = id.startsWith("stani-");
 
-                const klic = `${data.email}_${data.status}_${jeStani ? 'stani' : 'sezeni'}`;
+                const klic = `${data.email}_${jeStani ? 'stani' : 'sezeni'}`;
 
                 if (!skupiny[klic]) {
                     skupiny[klic] = {
@@ -187,6 +186,12 @@
                         jeStani: jeStani,
                         sedadla: []
                     };
+                }
+
+                if (data.status === "ceka_na_platbu") {
+                    skupiny[klic].status = "ceka_na_platbu";
+                } else if (data.status === "zaplaceno" && skupiny[klic].status !== "ceka_na_platbu") {
+                    skupiny[klic].status = "zaplaceno";
                 }
 
                 if (jeStani) {
