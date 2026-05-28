@@ -248,7 +248,7 @@
             rezimStani = true;
             sekceSezeni.style.display = 'none';
             sekceStani.style.display = 'block';
-            vybranaMeskata.clear();
+            vybranaMista.clear();
         } else {
             rezimStani = false;
             sekceSezeni.style.display = 'block';
@@ -260,15 +260,15 @@
     function klikNaSedadlo(id, element) {
         if (stavSedadlaGlobalni[id]) return;
 
-        if (vybranaMeskata.has(id)) {
-            vybranaMeskata.delete(id);
+        if (vybranaMista.has(id)) {
+            vybranaMista.delete(id);
             element.classList.remove('selected');
         } else {
-            if (vybranaMeskata.size >= 10) {
+            if (vybranaMista.size >= 10) {
                 alert('Na jednu objednávku můžete vybrat maximálně 10 míst.');
                 return;
             }
-            vybranaMeskata.add(id);
+            vybranaMista.add(id);
             element.classList.add('selected');
         }
         aktualizovatKosik();
@@ -291,12 +291,12 @@
             btn.disabled = false;
             cenaCelkem = pocetKs * 50; 
         } else {
-            pocetKs = vybranaMeskata.size;
+            pocetKs = vybranaMista.size;
             if (pocetKs === 0) {
                 seatsText.innerText = "Žádná vybraná místa";
                 btn.disabled = true;
             } else {
-                seatsText.innerText = Array.from(vybranaMeskata).join(', ');
+                seatsText.innerText = Array.from(vybranaMista).join(', ');
                 btn.disabled = false;
             }
             cenaCelkem = pocetKs * cenaSezeni; 
@@ -316,7 +316,7 @@
         const jmeno = document.getElementById('name').value;
         const email = document.getElementById('email').value;
         
-        let pocetKs = rezimStani ? parseInt(inputPocetStani.value) : vybranaMeskata.size;
+        let pocetKs = rezimStani ? parseInt(inputPocetStani.value) : vybranaMista.size;
         let cenaZaKus = rezimStani ? 50 : cenaSezeni;
         const celkovaCena = pocetKs * cenaZaKus;
 
@@ -331,7 +331,7 @@
                     datum: new Date().toISOString()
                 });
             } else {
-                for (let seatId of vybranaMeskata) {
+                for (let seatId of vybranaMista) {
                     await setDoc(doc(db, "sedadla", seatId), {
                         status: "ceka_na_platbu",
                         jmeno: jmeno,
@@ -353,7 +353,7 @@
             document.getElementById('qr-image').src = qrUrl;
             document.getElementById('qr-modal').style.display = 'flex';
 
-            vybranaMeskata.clear();
+            vybranaMista.clear();
             document.querySelectorAll('.seat.selected').forEach(el => el.classList.remove('selected'));
             reservationForm.reset();
             aktualizovatKosik();
