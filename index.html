@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rezervace: The Joy SHOW 2026 </title>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 350px; gap: 25px; }
+        @media (max-width: 850px) { .container { grid-template-columns: 1fr; } }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); margin-bottom: 20px; }
+        .header { grid-column: 1 / -1; text-align: center; margin-bottom: 0; }
+        h1 { margin: 0 0 5px 0; color: #0f172a; font-size: 24px; }
+        .subtitle { margin: 0; color: #64748b; font-size: 15px; }
+        .date-badge { display: inline-block; background: #f43f5e; color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; margin-top: 8px; font-weight: 600; }
+        
+        .stage { background: #334155; color: white; text-align: center; padding: 12px; font-weight: 700; letter-spacing: 4px; border-radius: 6px; margin: 15px auto 35px auto; width: 80%; font-size: 14px; }
+        .seating-chart { display: flex; flex-direction: column; align-items: center; gap: 10px; overflow-x: auto; padding: 10px 0; }
+        .row { display: flex; align-items: center; gap: 6px; }
+        .row-label { font-weight: 600; width: 65px; font-size: 13px; color: #64748b; }
+        .seat { width: 30px; height: 30px; background-color: #22c55e; color: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; cursor: pointer; user-select: none; transition: all 0.15s ease; }
+        .seat.selected { background-color: #eab308 !important; color: #1e293b; }
+        .seat.pending { background-color: #f97316 !important; cursor: not-allowed; }
+        .seat.occupied { background-color: #cbd5e1 !important; color: #94a3b8; cursor: not-allowed; }
+        .seat.cameraman { background-color: #94a3b8 !important; color: #475569 !important; cursor: not-allowed; font-size: 14px; }
+        
+        .legend { display: flex; justify-content: center; gap: 20px; margin-top: 25px; font-size: 13px; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .legend-dot { width: 14px; height: 14px; border-radius: 4px; }
+        
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
+        input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        .summary-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-top: 20px; }
+        .price-total { font-size: 20px; font-weight: 700; color: #2563eb; }
+        .btn-submit { background: #2563eb; color: white; border: none; width: 100%; padding: 14px; font-size: 15px; font-weight: 600; border-radius: 6px; cursor: pointer; margin-top: 15px; transition: background 0.2s; }
+        .btn-submit:disabled { background: #94a3b8; cursor: not-allowed; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; overflow-y: auto; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; max-width: 440px; width: 90%; text-align: center; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); max-height: 90vh; overflow-y: auto; }
+        .qr-img { margin: 15px 0; border: 1px solid #e2e8f0; padding: 8px; background: white; display: inline-block; }
+        .btn-close { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; font-size: 15px; margin-top: 10px; }
+        
+        .payment-box { border: 1px solid #cbd5e1; background: #f8fafc; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: left; font-size: 14px; color: #1e293b; }
+        .payment-row { display: flex; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed #e2e8f0; }
+        .payment-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card header">
+        <h1>Rezervace lístků</h1>
+        <p class="subtitle">Závěrečná taneční show The Joy | Koncertní sál ZUŠ Litvínov</p>
+        <div class="date-badge">📅 Sobota 20. 6. 2026</div>
+    </div>
+
+    <div class="card">
+        <div class="stage">PÓDIUM</div>
+        <div class="seating-chart" id="sal"></div>
+        <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background: #22c55e;"></div> Volno</div>
+            <div class="legend-item"><div class="legend-dot" style="background: #eab308;"></div> Váš výběr</div>
+            <div class="legend-item"><div class="legend-dot" style="background: #f97316;"></div> Čeká na platbu</div>
+            <div class="legend-item"><div class="legend-dot" style="background: #cbd5e1;"></div> Zaplaceno / Obsazeno</div>
+            <div class="legend-item"><div class="legend-dot" style="background: #94a3b8; display: flex; align-items: center; justify-content: center; color: #475569; font-size: 10px; font-weight: bold;">✕</div> Místo pro kameru</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <form id="reservation-form" onsubmit="odeslatRezervaci(event)">
+            <h3>Vaše objednávka</h3>
+            <div class="form-group">
+                <label for="name">Jméno a příjmení:</label>
+                <input type="text" id="name" required placeholder="Jan Novák">
+            </div>
+            <div class="form-group">
+                <label for="email">E-mail:</label>
+                <input type="email" id="email" required placeholder="jan.novak@email.cz">
+            </div>
+            <div class="summary-box">
+                <div style="font-size: 13px; color: #64748b;">Vybraná místa:</div>
+                <div id="selected-seats-text" style="font-weight: 600; margin-bottom: 10px;">Žádná vybraná místa</div>
+                <div style="font-size: 13px; color: #64748b;">Cena celkem (80 Kč / ks):</div>
+                <div class="price-total"><span id="total-price">0</span> Kč</div>
+            </div>
+            <button type="submit" class="btn-submit" id="submit-btn" disabled>Závazně rezervovat</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="qr-modal">
+    <div class="modal-content">
+        <h2 style="margin-top:0; color:#10b981; font-size: 20px;">Místa jsou rezervována!</h2>
+        <p style="font-size: 13.5px; margin-bottom: 5px; color:#475569; line-height: 1.4;">Pro dokončení objednávky proveďte platbu. Místa jsou rezervována! Naskenujte QR kód k platbě. Vstupenku Vám odešleme na e-mail nejpozději do 24 hodin od připsání platby.</p>
+        
+        <img src="" id="qr-image" class="qr-img" alt="QR Platba" width="180" height="180">
+        
+        <div class="payment-box">
+            <div style="font-weight: bold; font-size: 15px; color: #0f172a; margin-bottom: 12px; text-align: center;">ℹ️ Instrukce k platbě</div>
+            
+            <div class="payment-row">
+                <span><strong>Číslo účtu:</strong></span>
+                <span>123-1449000267 / 0100 </span>
+            </div>
+            <div class="payment-row">
+                <span><strong>Částka:</strong></span>
+                <span><strong style="color: #2563eb; font-size: 15px;"><span id="lbl-cena"></span> Kč</strong></span>
+            </div>
+            <div class="payment-row" style="flex-direction: column; gap: 4px;">
+                <span><strong>Zpráva pro příjemce:</strong></span>
+                <span id="lbl-zprava" style="font-family: monospace; font-weight: bold; background: #e2e8f0; padding: 4px 6px; border-radius: 4px; display: inline-block; font-size: 13px;"></span>
+            </div>
+        </div>
+        
+        <button class="btn-close" onclick="zavritModal()">Rozumím, zavřít okno</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAoXjgvQ7JRrO9D9b9RXmDRIP_Ci2Kny-w",
+        authDomain: "joyshow-abf1b.firebaseapp.com",
+        projectId: "joyshow-abf1b",
+        storageBucket: "joyshow-abf1b.firebasestorage.app",
+        messagingSenderId: "15709074926",
+        appId: "1:15709074926:web:7171d5c28686be321d0aff",
+        measurementId: "G-6CWSBH4QY4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const IBAN = "CZ5301000001231449000267"; 
+    const cenaSezeni = 80;
+
+    const configRad = [10, 11, 13, 15, 17, 18, 20, 7]; 
+    let vybranaMeskata = new Set();
+    let stavSedadlaGlobalni = {};
+
+    const salDiv = document.getElementById('sal');
+    configRad.forEach((pocetZidli, indexRady) => {
+        const cisloRady = indexRady + 1;
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'row';
+
+        const label = document.createElement('div');
+        label.className = 'row-label';
+        label.innerText = `${cisloRady}. řada`;
+        rowDiv.appendChild(label);
+
+        for (let i = 1; i <= pocetZidli; i++) {
+            const seatId = `${cisloRady}-${i}`;
+            const seat = document.createElement('div');
+            seat.className = 'seat';
+            seat.innerText = i;
+            seat.id = `seat-${seatId}`;
+            
+            if (cisloRady === 8 && i === 4) {
+                seat.className = 'seat cameraman';
+                seat.innerText = '✕';
+                seat.title = 'Kameraman';
+            } else {
+                seat.onclick = () => klikNaSedadlo(seatId, seat);
+            }
+            
+            rowDiv.appendChild(seat);
+        }
+        salDiv.appendChild(rowDiv);
+    });
+
+    onSnapshot(collection(db, "sedadla"), (snapshot) => {
+        stavSedadlaGlobalni = {};
+        document.querySelectorAll('.seat').forEach(s => {
+            if (!s.classList.contains('cameraman')) {
+                s.classList.remove('occupied', 'pending');
+            }
+        });
+
+        snapshot.forEach((doc) => {
+            if (!doc.id.startsWith("stani-")) {
+                const data = doc.data();
+                const seatElement = document.getElementById(`seat-${doc.id}`);
+                if (seatElement && !seatElement.classList.contains('cameraman')) {
+                    stavSedadlaGlobalni[doc.id] = data.status;
+                    if (data.status === "zaplaceno") seatElement.classList.add('occupied');
+                    if (data.status === "ceka_na_platbu") seatElement.classList.add('pending');
+                }
+            }
+        });
+        aktualizovatKosik();
+    });
+
+    function klikNaSedadlo(id, element) {
+        if (stavSedadlaGlobalni[id]) return;
+
+        if (vybranaMeskata.has(id)) {
+            vybranaMeskata.delete(id);
+            element.classList.remove('selected');
+        } else {
+            vybranaMeskata.add(id);
+            element.classList.add('selected');
+        }
+        aktualizovatKosik();
+    }
+    window.klikNaSedadlo = klikNaSedadlo;
+
+    function aktualizovatKosik() {
+        const btn = document.getElementById('submit-btn');
+        const seatsText = document.getElementById('selected-seats-text');
+        const priceText = document.getElementById('total-price');
+        
+        const cenaCelkem = vybranaMeskata.size * cenaSezeni;
+        priceText.innerText = cenaCelkem;
+
+        if (vybranaMeskata.size === 0) {
+            seatsText.innerText = "Žádná vybraná místa";
+            btn.disabled = true;
+        } else {
+            seatsText.innerText = Array.from(vybranaMeskata).join(', ');
+            btn.disabled = false;
+        }
+    }
+
+    async function odeslatRezervaci(e) {
+        e.preventDefault();
+        const btnSubmit = document.getElementById('submit-btn');
+        btnSubmit.disabled = true;
+
+        const jmeno = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const celkovaCena = vybranaMeskata.size * cenaSezeni;
+
+        try {
+            for (let seatId of vybranaMeskata) {
+                await setDoc(doc(db, "sedadla", seatId), {
+                    status: "ceka_na_platbu",
+                    jmeno: jmeno,
+                    email: email,
+                    datum: new Date().toISOString()
+                });
+            }
+
+            const cisteJmeno = jmeno.normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 40);
+            const zpravaProPrijemce = `${cisteJmeno} listky JOY show`;
+
+            const qrText = `SPD*1.0*ACC:${IBAN}*AM:${celkovaCena}.00*CC:CZK*MSG:${zpravaProPrijemce}`;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrText)}`;
+            
+            document.getElementById('lbl-cena').innerText = celkovaCena;
+            document.getElementById('lbl-zprava').innerText = zpravaProPrijemce;
+
+            document.getElementById('qr-image').src = qrUrl;
+            document.getElementById('qr-modal').style.display = 'flex';
+
+            vybranaMeskata.clear();
+            aktualizovatKosik();
+            document.getElementById('reservation-form').reset();
+        } catch (error) {
+            alert("Chyba databáze: " + error.message);
+        }
+        btnSubmit.innerText = "Závazně rezervovat";
+    }
+    window.odeslatRezervaci = odeslatRezervaci;
+
+    function zavritModal() {
+        document.getElementById('qr-modal').style.display = 'none';
+    }
+    window.zavritModal = zavritModal;
+</script>
+</body>
+</html>

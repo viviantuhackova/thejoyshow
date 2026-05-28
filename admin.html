@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Správa plateb (ADMIN) - ZUŠ Litvínov</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        #skutecny-admin { display: none; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #0f172a; color: #f8fafc; padding: 15px; margin: 0; }
+        .container { max-width: 950px; margin: 0 auto; }
+        .card { background: #1e293b; padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        h1 { border-bottom: 2px solid #334155; padding-bottom: 10px; margin-bottom: 20px; font-size: 24px; text-align: center; }
+        .reservation-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #334155; gap: 15px; }
+        .reservation-row:last-child { border-bottom: none; }
+        .info-box { flex-grow: 1; min-width: 0; display: flex; align-items: center; gap: 15px; }
+        .customer-details { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #cbd5e1; font-size: 15px; }
+        .actions-box { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+        .btn-pay { background: #10b981; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; white-space: nowrap; font-size: 13px; transition: background 0.2s; }
+        .btn-pay:hover { background: #059669; }
+        .btn-download { background: #3b82f6; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; white-space: nowrap; font-size: 13px; transition: background 0.2s; }
+        .btn-download:hover { background: #2563eb; }
+        .btn-delete { background: #ef4444; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; white-space: nowrap; font-weight: bold; font-size: 13px; transition: background 0.2s; }
+        .btn-delete:hover { background: #dc2626; }
+        .badge { padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; white-space: nowrap; display: inline-block; flex-shrink: 0; text-align: center; }
+        .badge.pending { background: #f97316; color: white; }
+        .badge.paid { background: #10b981; color: white; }
+        .type-label { font-weight: 800; color: #ffffff; background-color: #ef4444; padding: 5px 12px; border-radius: 6px; font-size: 16px; letter-spacing: 1px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .seat-info { font-size: 15px; font-weight: bold; color: #38bdf8; display: flex; flex-direction: column; gap: 4px; white-space: nowrap; flex-shrink: 0; min-width: 180px; }
+        .tickets-container { position: absolute; left: -9999px; top: -9999px; display: flex; flex-direction: column; gap: 15px; padding: 15px; background: #0f172a; width: 630px; }
+        .ticket-template { width: 600px; height: 230px; background: #1e1b4b; color: white; border: 4px solid #f43f5e; border-radius: 16px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; }
+        .ticket-header { border-bottom: 2px dashed #f43f5e; padding-bottom: 8px; font-size: 22px; font-weight: bold; letter-spacing: 1px; color: #f43f5e; text-align: center; }
+        .ticket-body { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+        .ticket-info { font-size: 16px; color: #e2e8f0; line-height: 1.5; }
+        .secure-seat-box { background: #be123c; background-image: linear-gradient(45deg, #f43f5e 25%, #be123c 25%, #be123c 50%, #f43f5e 50%, #f43f5e 75%, #be123c 75%, #be123c 100%); background-size: 40px 40px; color: white; border: 2px solid #ffffff; padding: 15px 25px; border-radius: 8px; font-size: 18px; font-weight: 900; text-align: center; min-width: 120px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        @media (max-width: 700px) {
+            h1 { font-size: 20px; }
+            .card { padding: 15px; }
+            .reservation-row { flex-direction: column; align-items: stretch; gap: 12px; padding: 18px 0; border-bottom: 2px solid #334155; }
+            .info-box { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .seat-info { font-size: 16px; width: 100%; justify-content: flex-start; gap: 4px; }
+            .customer-details { white-space: normal; overflow: visible; text-overflow: clip; word-break: break-all; font-size: 16px; width: 100%; }
+            .actions-box { width: 100%; justify-content: flex-end; gap: 8px; border-top: 1px dashed #334155; padding-top: 12px; flex-wrap: wrap; }
+            .btn-pay, .btn-download, .btn-delete { flex-grow: 1; text-align: center; padding: 12px; font-size: 14px; }
+            .badge { margin-top: 2px; font-size: 12px; padding: 6px 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="skutecny-admin">
+    <div class="container">
+        <h1>Administrace rezervací sálu</h1>
+        <div class="card">
+            <h3 style="margin-top:0; margin-bottom:15px; color:#94a3b8; font-size: 16px;">Přehled aktivních objednávek</h3>
+            <div id="seznam-rezervaci">Načítám objednávky z databáze...</div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAoXjgvQ7JRrO9D9b9RXmDRIP_Ci2Kny-w",
+        authDomain: "joyshow-abf1b.firebaseapp.com",
+        projectId: "joyshow-abf1b",
+        storageBucket: "joyshow-abf1b.firebasestorage.app",
+        messagingSenderId: "15709074926",
+        appId: "1:15709074926:web:7171d5c28686be321d0aff",
+        measurementId: "G-6CWSBH4QY4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function overitPristup() {
+        const zadanyPin = prompt("Vstup do administrace THE JOY SHOW.\nZadejte přístupový PIN kód:");
+        if (!zadanyPin) {
+            window.location.href = "index.html";
+            return;
+        }
+
+        try {
+            const pinDoc = await getDoc(doc(db, "system", "konfigurace"));
+            if (pinDoc.exists() && pinDoc.data().adminPin === zadanyPin) {
+                document.getElementById("skutecny-admin").style.display = "block";
+                spustitAdmin();
+            } else {
+                alert("Nesprávný PIN kód! Přístup byl odmítnut.");
+                window.location.href = "index.html";
+            }
+        } catch (e) {
+            alert("Chyba zabezpečení. Přístup odepřen.");
+            window.location.href = "index.html";
+        }
+    }
+
+    overitPristup();
+
+    function spustitAdmin() {
+        const seznamDiv = document.getElementById('seznam-rezervaci');
+
+        window.stahnoutVstupenkyHromadne = function(jmeno, sedadlaPole) {
+            const container = document.createElement('div');
+            container.className = 'tickets-container';
+
+            sedadlaPole.forEach(s => {
+                const ticket = document.createElement('div');
+                ticket.className = 'ticket-template';
+                
+                ticket.innerHTML = `
+                    <div class="ticket-header">🎟️ THE JOY SHOW 2026 🎟️</div>
+                    <div class="ticket-body">
+                        <div class="ticket-info">
+                            <strong>Divák:</strong> ${jmeno}<br>
+                            <strong>Datum:</strong> Sobota 20. 6. 2026 v 17:00<br>
+                            <strong>Místo:</strong> Koncertní sál ZUŠ Litvínov
+                        </div>
+                        <div class="secure-seat-box">
+                            <span style="position: relative; z-index: 2; text-shadow: 2px 2px 3px rgba(0,0,0,0.8);">${s.radek}. řada<br>Místo ${s.misto}</span>
+                        </div>
+                    </div>
+                    <div style="font-size:12px; color:#f59e0b; text-align:center; margin-top:5px; font-style: italic; font-weight: 600; letter-spacing: 0.5px;">✨ Srdečně Vás zveme na nezapomenutelný večer plný tance ✨</div>
+                `;
+                container.appendChild(ticket);
+            });
+
+            document.body.appendChild(container);
+
+            html2canvas(container, { scale: 2, logging: false }).then(canvas => {
+                const link = document.createElement('a');
+                const cisteJmeno = jmeno.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_');
+                link.download = `vstupenky_${cisteJmeno}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                document.body.removeChild(container);
+            });
+        };
+
+        onSnapshot(collection(db, "sedadla"), (snapshot) => {
+            if (snapshot.empty) {
+                seznamDiv.innerHTML = "<em>Žádné rezervace v systému.</em>";
+                return;
+            }
+
+            const skupiny = {};
+
+            snapshot.forEach((documentSnapshot) => {
+                const id = documentSnapshot.id;
+                if (id.startsWith("stani-")) return;
+
+                const data = documentSnapshot.data();
+                const dily = id.split('-');
+                const radek = dily[0];
+                const misto = dily[1];
+
+                const klic = `${data.email}_${data.status}`;
+
+                if (!skupiny[klic]) {
+                    skupiny[klic] = {
+                        jmeno: data.jmeno,
+                        email: data.email,
+                        status: data.status,
+                        sedadla: []
+                    };
+                }
+                skupiny[klic].sedadla.push({ id, radek, misto });
+            });
+
+            let nalezenaSkupina = false;
+            seznamDiv.innerHTML = "";
+
+            Object.keys(skupiny).forEach((klic) => {
+                nalezenaSkupina = true;
+                const data = skupiny[klic];
+
+                data.sedadla.sort((a, b) => a.radek - b.radek || a.misto - b.misto);
+
+                const row = document.createElement('div');
+                row.className = 'reservation-row';
+
+                const sedadlaTexty = data.sedadla.map(s => `${s.radek}. řada / m. ${s.misto}`).join('<br>');
+                const mistoBadge = `<div class="seat-info"><span class="type-label" style="width:fit-content;">SEZENÍ (${data.sedadla.length}ks)</span><span style="line-height:1.3; font-size:14px;">${sedadlaTexty}</span></div>`;
+
+                const stavBadge = data.status === "zaplaceno" 
+                    ? '<span class="badge paid">ZAPLACENO</span>' 
+                    : '<span class="badge pending">ČEKÁ NA PLATBU</span>';
+
+                const info = document.createElement('div');
+                info.className = 'info-box';
+                info.innerHTML = `${mistoBadge} <div class="customer-details"><strong>${data.jmeno}</strong><br><span style="font-size:12px; color:#94a3b8;">${data.email}</span></div> ${stavBadge}`;
+                row.appendChild(info);
+
+                const akce = document.createElement('div');
+                akce.className = 'actions-box';
+                
+                const btnDownload = document.createElement('button');
+                btnDownload.className = 'btn-download';
+                btnDownload.innerText = 'Stáhnout lístky';
+                btnDownload.onclick = () => {
+                    stahnoutVstupenkyHromadne(data.jmeno, data.sedadla);
+                };
+                akce.appendChild(btnDownload);
+
+                if (data.status === "ceka_na_platbu") {
+                    const btnPay = document.createElement('button');
+                    btnPay.className = 'btn-pay';
+                    btnPay.innerText = 'Potvrdit';
+                    btnPay.onclick = async () => {
+                        for (let s of data.sedadla) {
+                            await updateDoc(doc(db, "sedadla", s.id), { status: "zaplaceno" });
+                        }
+                        
+                        const emailKomu = data.email;
+                        const predmet = encodeURIComponent("Potvrzení platby a vstupenky - THE JOY 2026");
+                        
+                        const textMistaVmailu = data.sedadla.map(s => `• ${s.radek}. řada, místo ${s.misto}`).join('\n');
+                        
+                        const textEmailu = encodeURIComponent(
+                            `Dobrý den,\n\n` +
+                            `Vaše platba byla úspěšně přijata a Vaše místa jsou závazně potvrzena.\n\n` +
+                            `Detail Vaší objednávky:\n` +
+                            `Jméno diváka: ${data.jmeno}\n` +
+                            `Počet vstupenek: ${data.sedadla.length}\n` +
+                            `Rezervovaná místa:\n${textMistaVmailu}\n\n` +
+                            `DŮLEŽITÉ POKYNY:\n` +
+                            `• V PŘÍLOZE TOHOTO E-MAILU naleznete Vaše vstupenky.\n` +
+                            `• Uložte si lístek do mobilu nebo si ho vytiskněte a ukažte ho u vstupu do sálu.\n` +
+                            `• Na tento e-mail prosím NEODPOVÍDEJTE, je generován automaticky.\n\n` +
+                            `Těšíme se na Vás na závěrečné taneční show "The Joy" 20. 6. 2026!`
+                        );
+                        
+                        window.location.href = `mailto:${emailKomu}?cc=misa.scheith@seznam.cz&subject=${predmet}&body=${textEmailu}`;
+                    };
+                    akce.appendChild(btnPay);
+                }
+
+                const btnDel = document.createElement('button');
+                btnDel.className = 'btn-delete';
+                btnDel.innerText = 'Uvolnit vše';
+                btnDel.onclick = async () => {
+                    const mistaCárka = data.sedadla.map(s => `${s.radek}-${s.misto}`).join(', ');
+                    if(confirm(`Opravdu chcete stornovat a uvolnit všechna tato místa (${mistaCárka})?`)) {
+                        for (let s of data.sedadla) {
+                            await deleteDoc(doc(db, "sedadla", s.id));
+                        }
+                    }
+                };
+                akce.appendChild(btnDel);
+
+                row.appendChild(akce);
+                seznamDiv.appendChild(row);
+            });
+
+            if (!nalezenaSkupina) {
+                seznamDiv.innerHTML = "<em>Žádné rezervace k sezení v systému.</em>";
+            }
+        });
+    }
+</script>
+</body>
+</html>
