@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rezervace: The Joy SHOW 2026 </title>
+    <title>Rezervace: The Joy SHOW 2026</title>
     <style>
         body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
         .container { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 350px; gap: 25px; }
@@ -44,6 +44,12 @@
         .payment-box { border: 1px solid #cbd5e1; background: #f8fafc; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: left; font-size: 14px; color: #1e293b; }
         .payment-row { display: flex; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed #e2e8f0; }
         .payment-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+        .sold-out-box { background: #fee2e2; border: 2px solid #ef4444; border-radius: 8px; padding: 15px; text-align: center; margin-bottom: 20px; }
+        .sold-out-title { font-size: 18px; font-weight: bold; color: #991b1b; margin-bottom: 4px; }
+        .sold-out-text { color: #b91c1c; font-size: 13.5px; }
+        #sekce-sezeni { display: block; }
+        #sekce-stani { display: none; }
     </style>
 </head>
 <body>
@@ -53,22 +59,43 @@
         <h1>Rezervace lístků</h1>
         <p class="subtitle">Závěrečná taneční show The Joy | Koncertní sál ZUŠ Litvínov</p>
         <div class="date-badge">📅 Sobota 20. 6. 2026</div>
+        
+        <p style="margin: 15px 0 0 0; color: #ea580c; font-size: 14px; font-weight: 600; line-height: 1.4;">
+            💡 Upozornění: Jakmile se vyprodají všechna místa k sezení, automaticky se na této stránce spustí prodej lístků na stání. Dostane se na každého!
+        </p>
     </div>
 
     <div class="card">
-        <div class="stage">PÓDIUM</div>
-        <div class="seating-chart" id="sal"></div>
-        <div class="legend">
-            <div class="legend-item"><div class="legend-dot" style="background: #22c55e;"></div> Volno</div>
-            <div class="legend-item"><div class="legend-dot" style="background: #eab308;"></div> Váš výběr</div>
-            <div class="legend-item"><div class="legend-dot" style="background: #f97316;"></div> Čeká na platbu</div>
-            <div class="legend-item"><div class="legend-dot" style="background: #cbd5e1;"></div> Zaplaceno / Obsazeno</div>
-            <div class="legend-item"><div class="legend-dot" style="background: #94a3b8; display: flex; align-items: center; justify-content: center; color: #475569; font-size: 10px; font-weight: bold;">✕</div> Místo pro kameru</div>
+        <div id="loading-state" style="text-align:center; padding: 30px; color:#64748b; font-weight: 500;">
+            Načítám plánek sálu a dostupnost lístků...
+        </div>
+
+        <div id="sekce-sezeni">
+            <div class="stage">PÓDIUM</div>
+            <div class="seating-chart" id="sal"></div>
+            <div class="legend">
+                <div class="legend-item"><div class="legend-dot" style="background: #22c55e;"></div> Volno</div>
+                <div class="legend-item"><div class="legend-dot" style="background: #eab308;"></div> Váš výběr</div>
+                <div class="legend-item"><div class="legend-dot" style="background: #f97316;"></div> Čeká na platbu</div>
+                <div class="legend-item"><div class="legend-dot" style="background: #cbd5e1;"></div> Zaplaceno / Obsazeno</div>
+                <div class="legend-item"><div class="legend-dot" style="background: #94a3b8; display: flex; align-items: center; justify-content: center; color: #475569; font-size: 10px; font-weight: bold;">✕</div> Místo pro kameru</div>
+            </div>
+        </div>
+
+        <div id="sekce-stani">
+            <div class="sold-out-box">
+                <div class="sold-out-title">⚠️ Všechna místa k sezení jsou vyprodána!</div>
+                <div class="sold-out-text">Níže si můžete zakoupit lístky na stání.</div>
+            </div>
+            <div class="form-group">
+                <label style="font-weight: 600;">Počet lístků na stání (50 Kč / ks):</label>
+                <input type="number" id="stani-pocet" min="1" max="10" value="1" style="margin-top: 5px;">
+            </div>
         </div>
     </div>
 
     <div class="card">
-        <form id="reservation-form" onsubmit="odeslatRezervaci(event)">
+        <form id="reservation-form">
             <h3>Vaše objednávka</h3>
             <div class="form-group">
                 <label for="name">Jméno a příjmení:</label>
@@ -79,9 +106,9 @@
                 <input type="email" id="email" required placeholder="jan.novak@email.cz">
             </div>
             <div class="summary-box">
-                <div style="font-size: 13px; color: #64748b;">Vybraná místa:</div>
+                <div style="font-size: 13px; color: #64748b;">Typ lístků / místa:</div>
                 <div id="selected-seats-text" style="font-weight: 600; margin-bottom: 10px;">Žádná vybraná místa</div>
-                <div style="font-size: 13px; color: #64748b;">Cena celkem (80 Kč / ks):</div>
+                <div style="font-size: 13px; color: #64748b;">Cena celkem:</div>
                 <div class="price-total"><span id="total-price">0</span> Kč</div>
             </div>
             <button type="submit" class="btn-submit" id="submit-btn" disabled>Závazně rezervovat</button>
@@ -92,7 +119,7 @@
 <div class="modal" id="qr-modal">
     <div class="modal-content">
         <h2 style="margin-top:0; color:#10b981; font-size: 20px;">Místa jsou rezervována!</h2>
-        <p style="font-size: 13.5px; margin-bottom: 5px; color:#475569; line-height: 1.4;">Pro dokončení objednávky proveďte platbu. Místa jsou rezervována! Naskenujte QR kód k platbě. Vstupenku Vám odešleme na e-mail nejpozději do 24 hodin od připsání platby.</p>
+        <p style="font-size: 13.5px; margin-bottom: 5px; color:#475569; line-height: 1.4;">Pro dokončení objednávky proveďte platbu. Naskenujte QR kód k platbě. Vstupenku Vám odešleme na e-mail nejpozději do 24 hodin od připsání platby.</p>
         
         <img src="" id="qr-image" class="qr-img" alt="QR Platba" width="180" height="180">
         
@@ -101,7 +128,7 @@
             
             <div class="payment-row">
                 <span><strong>Číslo účtu:</strong></span>
-                <span>123-1449000267 / 0100 </span>
+                <span>123-1449000267 / 0100</span>
             </div>
             <div class="payment-row">
                 <span><strong>Částka:</strong></span>
@@ -113,7 +140,7 @@
             </div>
         </div>
         
-        <button class="btn-close" onclick="zavritModal()">Rozumím, zavřít okno</button>
+        <button type="button" class="btn-close" id="close-modal-btn">Rozumím, zavřít okno</button>
     </div>
 </div>
 
@@ -137,11 +164,19 @@
     const IBAN = "CZ5301000001231449000267"; 
     const cenaSezeni = 80;
 
-    const configRad = [10, 11, 13, 15, 17, 18, 20, 7]; 
-    let vybranaMeskata = new Set();
+    const configRad = [10]; 
+    let vybranaMista = new Set();
     let stavSedadlaGlobalni = {};
+    let rezimStani = false;
 
     const salDiv = document.getElementById('sal');
+    const loadingDiv = document.getElementById('loading-state');
+    const sekceSezeni = document.getElementById('sekce-sezeni');
+    const sekceStani = document.getElementById('sekce-stani');
+    const inputPocetStani = document.getElementById('stani-pocet');
+    const reservationForm = document.getElementById('reservation-form');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+
     configRad.forEach((pocetZidli, indexRady) => {
         const cisloRady = indexRady + 1;
         const rowDiv = document.createElement('div');
@@ -159,10 +194,11 @@
             seat.innerText = i;
             seat.id = `seat-${seatId}`;
             
-            if (cisloRady === 8 && i === 4) {
+            if (cisloRady === 1) {
+                seat.className = 'seat occupied';
+            } else if (cisloRady === 8 && i === 4) {
                 seat.className = 'seat cameraman';
                 seat.innerText = '✕';
-                seat.title = 'Kameraman';
             } else {
                 seat.onclick = () => klikNaSedadlo(seatId, seat);
             }
@@ -175,13 +211,13 @@
     onSnapshot(collection(db, "sedadla"), (snapshot) => {
         stavSedadlaGlobalni = {};
         document.querySelectorAll('.seat').forEach(s => {
-            if (!s.classList.contains('cameraman')) {
+            if (!s.classList.contains('cameraman') && !s.id.includes('seat-1-')) {
                 s.classList.remove('occupied', 'pending');
             }
         });
 
         snapshot.forEach((doc) => {
-            if (!doc.id.startsWith("stani-")) {
+            if (!doc.id.startsWith("stani-") && doc.id !== "konfigurace") {
                 const data = doc.data();
                 const seatElement = document.getElementById(`seat-${doc.id}`);
                 if (seatElement && !seatElement.classList.contains('cameraman')) {
@@ -191,8 +227,35 @@
                 }
             }
         });
-        aktualizovatKosik();
+        
+        loadingDiv.style.display = 'none';
+        vyhodnotitAutomatikuStani();
     });
+
+    function vyhodnotitAutomatikuStani() {
+        let volnychSezeni = 0;
+        configRad.forEach((pocetZidli, indexRady) => {
+            const cisloRady = indexRady + 1;
+            if (cisloRady === 1) return; 
+            for (let i = 1; i <= pocetZidli; i++) {
+                if (cisloRady === 8 && i === 4) continue; 
+                const seatId = `${cisloRady}-${i}`;
+                if (!stavSedadlaGlobalni[seatId]) volnychSezeni++;
+            }
+        });
+
+        if (volnychSezeni === 0) {
+            rezimStani = true;
+            sekceSezeni.style.display = 'none';
+            sekceStani.style.display = 'block';
+            vybranaMeskata.clear();
+        } else {
+            rezimStani = false;
+            sekceSezeni.style.display = 'block';
+            sekceStani.style.display = 'none';
+        }
+        aktualizovatKosik();
+    }
 
     function klikNaSedadlo(id, element) {
         if (stavSedadlaGlobalni[id]) return;
@@ -201,47 +264,81 @@
             vybranaMeskata.delete(id);
             element.classList.remove('selected');
         } else {
+            if (vybranaMeskata.size >= 10) {
+                alert('Na jednu objednávku můžete vybrat maximálně 10 míst.');
+                return;
+            }
             vybranaMeskata.add(id);
             element.classList.add('selected');
         }
         aktualizovatKosik();
     }
-    window.klikNaSedadlo = klikNaSedadlo;
 
     function aktualizovatKosik() {
         const btn = document.getElementById('submit-btn');
         const seatsText = document.getElementById('selected-seats-text');
         const priceText = document.getElementById('total-price');
         
-        const cenaCelkem = vybranaMeskata.size * cenaSezeni;
-        priceText.innerText = cenaCelkem;
+        let pocetKs = 0;
+        let cenaCelkem = 0;
 
-        if (vybranaMeskata.size === 0) {
-            seatsText.innerText = "Žádná vybraná místa";
-            btn.disabled = true;
-        } else {
-            seatsText.innerText = Array.from(vybranaMeskata).join(', ');
+        if (rezimStani) {
+            pocetKs = parseInt(inputPocetStani.value) || 1;
+            if (pocetKs < 1) pocetKs = 1;
+            if (pocetKs > 10) pocetKs = 10;
+            inputPocetStani.value = pocetKs;
+            seatsText.innerHTML = `Vstupenka na STÁNÍ (${pocetKs} ks)`;
             btn.disabled = false;
+            cenaCelkem = pocetKs * 50; 
+        } else {
+            pocetKs = vybranaMeskata.size;
+            if (pocetKs === 0) {
+                seatsText.innerText = "Žádná vybraná místa";
+                btn.disabled = true;
+            } else {
+                seatsText.innerText = Array.from(vybranaMeskata).join(', ');
+                btn.disabled = false;
+            }
+            cenaCelkem = pocetKs * cenaSezeni; 
         }
+
+        priceText.innerText = cenaCelkem;
     }
 
-    async function odeslatRezervaci(e) {
+    inputPocetStani.oninput = aktualizovatKosik;
+
+    reservationForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const btnSubmit = document.getElementById('submit-btn');
         btnSubmit.disabled = true;
+        btnSubmit.innerText = "Odesílám...";
 
         const jmeno = document.getElementById('name').value;
         const email = document.getElementById('email').value;
-        const celkovaCena = vybranaMeskata.size * cenaSezeni;
+        
+        let pocetKs = rezimStani ? parseInt(inputPocetStani.value) : vybranaMeskata.size;
+        let cenaZaKus = rezimStani ? 50 : cenaSezeni;
+        const celkovaCena = pocetKs * cenaZaKus;
 
         try {
-            for (let seatId of vybranaMeskata) {
-                await setDoc(doc(db, "sedadla", seatId), {
+            if (rezimStani) {
+                const objednavkaId = `stani-${Date.now()}`;
+                await setDoc(doc(db, "sedadla", objednavkaId), {
                     status: "ceka_na_platbu",
                     jmeno: jmeno,
                     email: email,
+                    pocetStani: pocetKs,
                     datum: new Date().toISOString()
                 });
+            } else {
+                for (let seatId of vybranaMeskata) {
+                    await setDoc(doc(db, "sedadla", seatId), {
+                        status: "ceka_na_platbu",
+                        jmeno: jmeno,
+                        email: email,
+                        datum: new Date().toISOString()
+                    });
+                }
             }
 
             const cisteJmeno = jmeno.normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 40);
@@ -257,19 +354,21 @@
             document.getElementById('qr-modal').style.display = 'flex';
 
             vybranaMeskata.clear();
+            document.querySelectorAll('.seat.selected').forEach(el => el.classList.remove('selected'));
+            reservationForm.reset();
             aktualizovatKosik();
-            document.getElementById('reservation-form').reset();
         } catch (error) {
-            alert("Chyba databáze: " + error.message);
+            console.error(error);
+            alert("Rezervaci se nepodařilo odeslat.");
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = "Závazně rezervovat";
         }
-        btnSubmit.innerText = "Závazně rezervovat";
-    }
-    window.odeslatRezervaci = odeslatRezervaci;
+    });
 
-    function zavritModal() {
+    closeModalBtn.addEventListener('click', function() {
         document.getElementById('qr-modal').style.display = 'none';
-    }
-    window.zavritModal = zavritModal;
+    });
 </script>
 </body>
 </html>
