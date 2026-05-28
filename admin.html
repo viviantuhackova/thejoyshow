@@ -25,6 +25,7 @@
         .badge.pending { background: #f97316; color: white; }
         .badge.paid { background: #10b981; color: white; }
         .type-label { font-weight: 800; color: #ffffff; background-color: #ef4444; padding: 5px 12px; border-radius: 6px; font-size: 16px; letter-spacing: 1px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .type-label.stani-label { background-color: #f59e0b; }
         .seat-info { font-size: 15px; font-weight: bold; color: #38bdf8; display: flex; flex-direction: column; gap: 4px; white-space: nowrap; flex-shrink: 0; min-width: 180px; }
         .tickets-container { position: absolute; left: -9999px; top: -9999px; display: flex; flex-direction: column; gap: 15px; padding: 15px; background: #0f172a; width: 630px; }
         .ticket-template { width: 600px; height: 230px; background: #1e1b4b; color: white; border: 4px solid #f43f5e; border-radius: 16px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; }
@@ -101,30 +102,52 @@
     function spustitAdmin() {
         const seznamDiv = document.getElementById('seznam-rezervaci');
 
-        window.stahnoutVstupenkyHromadne = function(jmeno, sedadlaPole) {
+        window.stahnoutVstupenkyHromadne = function(jmeno, sedadlaPole, jeStani) {
             const container = document.createElement('div');
             container.className = 'tickets-container';
 
-            sedadlaPole.forEach(s => {
-                const ticket = document.createElement('div');
-                ticket.className = 'ticket-template';
-                
-                ticket.innerHTML = `
-                    <div class="ticket-header">🎟️ THE JOY SHOW 2026 🎟️</div>
-                    <div class="ticket-body">
-                        <div class="ticket-info">
-                            <strong>Divák:</strong> ${jmeno}<br>
-                            <strong>Datum:</strong> Sobota 20. 6. 2026 v 17:00<br>
-                            <strong>Místo:</strong> Koncertní sál ZUŠ Litvínov
+            if (jeStani) {
+                const pocetStani = sedadlaPole[0].pocetStani || 1;
+                for (let i = 1; i <= pocetStani; i++) {
+                    const ticket = document.createElement('div');
+                    ticket.className = 'ticket-template';
+                    ticket.innerHTML = `
+                        <div class="ticket-header">🎟️ THE JOY SHOW 2026 🎟️</div>
+                        <div class="ticket-body">
+                            <div class="ticket-info">
+                                <strong>Divák:</strong> ${jmeno}<br>
+                                <strong>Datum:</strong> Sobota 20. 6. 2026 v 17:00<br>
+                                <strong>Místo:</strong> Koncertní sál ZUŠ Litvínov
+                            </div>
+                            <div class="secure-seat-box" style="background:#d97706;">
+                                <span style="position: relative; z-index: 2; text-shadow: 2px 2px 3px rgba(0,0,0,0.8);">LÍSTEK<br>NA STÁNÍ</span>
+                            </div>
                         </div>
-                        <div class="secure-seat-box">
-                            <span style="position: relative; z-index: 2; text-shadow: 2px 2px 3px rgba(0,0,0,0.8);">${s.radek}. řada<br>Místo ${s.misto}</span>
+                        <div style="font-size:12px; color:#f59e0b; text-align:center; margin-top:5px; font-style: italic; font-weight: 600; letter-spacing: 0.5px;">✨ Srdečně Vás zveme na nezapomenutelný večer plný tance ✨</div>
+                    `;
+                    container.appendChild(ticket);
+                }
+            } else {
+                sedadlaPole.forEach(s => {
+                    const ticket = document.createElement('div');
+                    ticket.className = 'ticket-template';
+                    ticket.innerHTML = `
+                        <div class="ticket-header">🎟️ THE JOY SHOW 2026 🎟️</div>
+                        <div class="ticket-body">
+                            <div class="ticket-info">
+                                <strong>Divák:</strong> ${jmeno}<br>
+                                <strong>Datum:</strong> Sobota 20. 6. 2026 v 17:00<br>
+                                <strong>Místo:</strong> Koncertní sál ZUŠ Litvínov
+                            </div>
+                            <div class="secure-seat-box">
+                                <span style="position: relative; z-index: 2; text-shadow: 2px 2px 3px rgba(0,0,0,0.8);">${s.radek}. řada<br>Místo ${s.misto}</span>
+                            </div>
                         </div>
-                    </div>
-                    <div style="font-size:12px; color:#f59e0b; text-align:center; margin-top:5px; font-style: italic; font-weight: 600; letter-spacing: 0.5px;">✨ Srdečně Vás zveme na nezapomenutelný večer plný tance ✨</div>
-                `;
-                container.appendChild(ticket);
-            });
+                        <div style="font-size:12px; color:#f59e0b; text-align:center; margin-top:5px; font-style: italic; font-weight: 600; letter-spacing: 0.5px;">✨ Srdečně Vás zveme na nezapomenutelný večer plný tance ✨</div>
+                    `;
+                    container.appendChild(ticket);
+                });
+            }
 
             document.body.appendChild(container);
 
@@ -148,24 +171,31 @@
 
             snapshot.forEach((documentSnapshot) => {
                 const id = documentSnapshot.id;
-                if (id.startsWith("stani-")) return;
+                if (id === "konfigurace") return;
 
                 const data = documentSnapshot.data();
-                const dily = id.split('-');
-                const radek = dily[0];
-                const misto = dily[1];
+                const jeStani = id.startsWith("stani-");
 
-                const klic = `${data.email}_${data.status}`;
+                const klic = `${data.email}_${data.status}_${jeStani ? 'stani' : 'sezeni'}`;
 
                 if (!skupiny[klic]) {
                     skupiny[klic] = {
                         jmeno: data.jmeno,
                         email: data.email,
                         status: data.status,
+                        jeStani: jeStani,
                         sedadla: []
                     };
                 }
-                skupiny[klic].sedadla.push({ id, radek, misto });
+
+                if (jeStani) {
+                    skupiny[klic].sedadla.push({ id, pocetStani: data.pocetStani || 1 });
+                } else {
+                    const dily = id.split('-');
+                    const radek = parseInt(dily[0]);
+                    const misto = parseInt(dily[1]);
+                    skupiny[klic].sedadla.push({ id, radek, misto });
+                }
             });
 
             let nalezenaSkupina = false;
@@ -175,13 +205,22 @@
                 nalezenaSkupina = true;
                 const data = skupiny[klic];
 
-                data.sedadla.sort((a, b) => a.radek - b.radek || a.misto - b.misto);
-
                 const row = document.createElement('div');
                 row.className = 'reservation-row';
 
-                const sedadlaTexty = data.sedadla.map(s => `${s.radek}. řada / m. ${s.misto}`).join('<br>');
-                const mistoBadge = `<div class="seat-info"><span class="type-label" style="width:fit-content;">SEZENÍ (${data.sedadla.length}ks)</span><span style="line-height:1.3; font-size:14px;">${sedadlaTexty}</span></div>`;
+                let mistoBadge = "";
+                let textMistaVmailu = "";
+
+                if (data.jeStani) {
+                    const celkemListku = data.sedadla.reduce((sum, s) => sum + s.pocetStani, 0);
+                    mistoBadge = `<div class="seat-info"><span class="type-label stani-label" style="width:fit-content;">STÁNÍ (${celkemListku}ks)</span><span style="line-height:1.3; font-size:14px; color:#f59e0b;">Vstupenky na stání</span></div>`;
+                    textMistaVmailu = `• Vstupenka na stání: ${celkemListku} ks`;
+                } else {
+                    data.sedadla.sort((a, b) => a.radek - b.radek || a.misto - b.misto);
+                    const sedadlaTexty = data.sedadla.map(s => `${s.radek}. řada / m. ${s.misto}`).join('<br>');
+                    mistoBadge = `<div class="seat-info"><span class="type-label" style="width:fit-content;">SEZENÍ (${data.sedadla.length}ks)</span><span style="line-height:1.3; font-size:14px;">${sedadlaTexty}</span></div>`;
+                    textMistaVmailu = data.sedadla.map(s => `• ${s.radek}. řada, místo ${s.misto}`).join('\n');
+                }
 
                 const stavBadge = data.status === "zaplaceno" 
                     ? '<span class="badge paid">ZAPLACENO</span>' 
@@ -199,7 +238,7 @@
                 btnDownload.className = 'btn-download';
                 btnDownload.innerText = 'Stáhnout lístky';
                 btnDownload.onclick = () => {
-                    stahnoutVstupenkyHromadne(data.jmeno, data.sedadla);
+                    stahnoutVstupenkyHromadne(data.jmeno, data.sedadla, data.jeStani);
                 };
                 akce.appendChild(btnDownload);
 
@@ -214,15 +253,14 @@
                         
                         const emailKomu = data.email;
                         const predmet = encodeURIComponent("Potvrzení platby a vstupenky - THE JOY 2026");
-                        
-                        const textMistaVmailu = data.sedadla.map(s => `• ${s.radek}. řada, místo ${s.misto}`).join('\n');
+                        const celkovyPocetText = data.jeStani ? data.sedadla.reduce((sum, s) => sum + s.pocetStani, 0) : data.sedadla.length;
                         
                         const textEmailu = encodeURIComponent(
                             `Dobrý den,\n\n` +
                             `Vaše platba byla úspěšně přijata a Vaše místa jsou závazně potvrzena.\n\n` +
                             `Detail Vaší objednávky:\n` +
                             `Jméno diváka: ${data.jmeno}\n` +
-                            `Počet vstupenek: ${data.sedadla.length}\n` +
+                            `Počet vstupenek: ${celkovyPocetText}\n` +
                             `Rezervovaná místa:\n${textMistaVmailu}\n\n` +
                             `DŮLEŽITÉ POKYNY:\n` +
                             `• V PŘÍLOZE TOHOTO E-MAILU naleznete Vaše vstupenky.\n` +
@@ -240,8 +278,8 @@
                 btnDel.className = 'btn-delete';
                 btnDel.innerText = 'Uvolnit vše';
                 btnDel.onclick = async () => {
-                    const mistaCárka = data.sedadla.map(s => `${s.radek}-${s.misto}`).join(', ');
-                    if(confirm(`Opravdu chcete stornovat a uvolnit všechna tato místa (${mistaCárka})?`)) {
+                    const potvrzeniText = data.jeStani ? "stornovat lístky na stání" : "stornovat a uvolnit všechna tato místa k sezení";
+                    if(confirm(`Opravdu chcete ${potvrzeniText}?`)) {
                         for (let s of data.sedadla) {
                             await deleteDoc(doc(db, "sedadla", s.id));
                         }
@@ -254,7 +292,7 @@
             });
 
             if (!nalezenaSkupina) {
-                seznamDiv.innerHTML = "<em>Žádné rezervace k sezení v systému.</em>";
+                seznamDiv.innerHTML = "<em>Žádné rezervace v systému.</em>";
             }
         });
     }
