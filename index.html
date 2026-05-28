@@ -84,7 +84,7 @@
 
         <div id="sekce-stani">
             <div class="sold-out-box">
-                <div class="sold-out-title">⚠️ Všechna místa k sezení jsou vyprodána!</div>
+                <div class="sold-out-title">⚠️ Všechna místa k sezení zijn vyprodána!</div>
                 <div class="sold-out-text">Níže si můžete zakoupit lístky na stání.</div>
             </div>
             <div class="form-group">
@@ -323,6 +323,7 @@
         try {
             if (rezimStani) {
                 const objednavkaId = `stani-${Date.now()}`;
+                // OPRAVA: Posíláme naprosto stejná a čistá pole bez 'pocetStani' pro shodu s pravidly Firestore
                 await setDoc(doc(db, "sedadla", objednavkaId), {
                     status: "ceka_na_platbu",
                     jmeno: jmeno,
@@ -341,8 +342,7 @@
                 }
             }
 
-            // Oprava: Bezpečné ošetření textu zprávy pro QR kód, které už nezkolabuje
-            const zpravaProPrijemce = jmeno.substring(0, 20) + " listky JOY show";
+            const zpravaProPrijemce = "JOY show listky";
 
             const qrText = `SPD*1.0*ACC:${IBAN}*AM:${celkovaCena}.00*CC:CZK*MSG:${zpravaProPrijemce}`;
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrText)}`;
@@ -358,7 +358,7 @@
             reservationForm.reset();
             aktualizovatKosik();
         } catch (error) {
-            console.error(error);
+            console.error("Detailní chyba Firebase: ", error);
             alert("Rezervaci se nepodařilo odeslat.");
         } finally {
             btnSubmit.disabled = false;
