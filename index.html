@@ -135,7 +135,7 @@
         <img src="" id="qr-image" class="qr-img" alt="QR Platba" width="180" height="180">
         
         <div class="payment-box">
-            <div style="font-weight: bold; font-size: 15px; color: #0f172a; margin-bottom: 12px; text-align: center;">ℹ️ Instrukce k platbě</div>
+            <div style="font-weight: bold; font-size: 15px; color: #0f172a; margin-bottom: 12px; text-align: center;">⚠️ Hlásí banka chybu? Opište údaje ručně:</div>
             
             <div class="payment-row">
                 <span><strong>Číslo účtu:</strong></span>
@@ -353,7 +353,7 @@
                 }
             }
 
-            const cisteJmeno = jmeno.normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 20);
+            const cisteJmeno = jmeno.normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 30);
             const zpravaProPrijemce = `${cisteJmeno} listky JOY`;
 
             const qrText = `SPD*1.0*ACC:${IBAN}*AM:${celkovaCena}.00*CC:CZK*MSG:${zpravaProPrijemce}`;
