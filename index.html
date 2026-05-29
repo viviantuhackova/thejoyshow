@@ -78,7 +78,7 @@
                 <div class="legend-item"><div class="legend-dot" style="background: #eab308;"></div> Váš výběr</div>
                 <div class="legend-item"><div class="legend-dot" style="background: #f97316;"></div> Čeká na platbu</div>
                 <div class="legend-item"><div class="legend-dot" style="background: #cbd5e1;"></div> Zaplaceno / Obsazeno</div>
-                <div class="legend-item"><div class="legend-dot" style="background: #94a3b8; display: flex; align-items: center; justify-content: center; color: #475569; font-size: 10px; font-weight: bold;">✕</div> Místo pro kamera</div>
+                <div class="legend-item"><div class="legend-dot" style="background: #94a3b8; display: flex; align-items: center; justify-content: center; color: #475569; font-size: 10px; font-weight: bold;">✕</div> Místo pro kameru</div>
             </div>
         </div>
 
@@ -113,7 +113,7 @@
                 <input type="text" id="name" required placeholder="Jan Novák">
             </div>
             <div class="form-group">
-                <label interpreter="email" for="email">E-mail:</label>
+                <label for="email">E-mail:</label>
                 <input type="email" id="email" required placeholder="jan.novak@email.cz">
             </div>
             <div class="summary-box">
@@ -172,7 +172,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const IBAN = "CZ43010000001231449000267";
+    const IBAN = "CZ5301000001231449000267"; 
     const cenaSezeni = 80;
 
     const configRad = [10, 11, 13, 15, 17, 18, 20, 7]; 
@@ -205,7 +205,9 @@
             seat.innerText = i;
             seat.id = `seat-${seatId}`;
             
-            if (cisloRady === 8 && i === 4) {
+            if (cisloRady === 1) {
+                seat.className = 'seat occupied';
+            } else if (cisloRady === 8 && i === 4) {
                 seat.className = 'seat cameraman';
                 seat.innerText = '✕';
             } else {
@@ -220,7 +222,7 @@
     onSnapshot(collection(db, "sedadla"), (snapshot) => {
         stavSedadlaGlobalni = {};
         document.querySelectorAll('.seat').forEach(s => {
-            if (!s.classList.contains('cameraman')) {
+            if (!s.classList.contains('cameraman') && !s.id.includes('seat-1-')) {
                 s.classList.remove('occupied', 'pending');
             }
         });
@@ -245,6 +247,7 @@
         let volnychSezeni = 0;
         configRad.forEach((pocetZidli, indexRady) => {
             const cisloRady = indexRady + 1;
+            if (cisloRady === 1) return; 
             for (let i = 1; i <= pocetZidli; i++) {
                 if (cisloRady === 8 && i === 4) continue; 
                 const seatId = `${cisloRady}-${i}`;
@@ -313,7 +316,7 @@
         priceText.innerText = cenaCelkem;
     }
 
-    inputPocetStani.onchange = () => { aktualizovatKosik(); };
+    inputPocetStani.oninput = aktualizovatKosik;
 
     reservationForm.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -350,10 +353,10 @@
                 }
             }
 
-            const cisteJmeno = jmeno.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').substring(0, 15);
-            const zpravaProPrijemce = `${cisteJmeno}_listky_JOY`;
+            const cisteJmeno = jmeno.normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 20);
+            const zpravaProPrijemce = `${cisteJmeno} listky JOY`;
 
-            const qrText = `SPD*1.0*ACC:${IBAN}*AM:${celkovaCena}*CC:CZK*MSG:${zpravaProPrijemce}`;
+            const qrText = `SPD*1.0*ACC:${IBAN}*AM:${celkovaCena}.00*CC:CZK*MSG:${zpravaProPrijemce}`;
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrText)}`;
             
             document.getElementById('lbl-cena').innerText = celkovaCena;
