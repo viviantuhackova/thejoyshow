@@ -61,7 +61,7 @@
         <div class="date-badge">📅 Sobota 20. 6. 2026</div>
         
         <p style="margin: 15px 0 0 0; color: #ea580c; font-size: 14px; font-weight: 600; line-height: 1.4;">
-            💡 Upozornění: Jakmile se vyprodají všechna místa k sezení, automaticky se na této stránce spustí prodej lístků na stání. Dostane se na každého!
+            💡 Upozornění: Jakmile se vyprodají XML místa k sezení, automaticky se na této stránce spustí prodej lístků na stání. Dostane se na každého!
         </p>
     </div>
 
@@ -205,9 +205,7 @@
             seat.innerText = i;
             seat.id = `seat-${seatId}`;
             
-            if (cisloRady === 1) {
-                seat.className = 'seat occupied';
-            } else if (cisloRady === 8 && i === 4) {
+            if (cisloRady === 8 && i === 4) {
                 seat.className = 'seat cameraman';
                 seat.innerText = '✕';
             } else {
@@ -222,7 +220,7 @@
     onSnapshot(collection(db, "sedadla"), (snapshot) => {
         stavSedadlaGlobalni = {};
         document.querySelectorAll('.seat').forEach(s => {
-            if (!s.classList.contains('cameraman') && !s.id.includes('seat-1-')) {
+            if (!s.classList.contains('cameraman')) {
                 s.classList.remove('occupied', 'pending');
             }
         });
@@ -247,7 +245,6 @@
         let volnychSezeni = 0;
         configRad.forEach((pocetZidli, indexRady) => {
             const cisloRady = indexRady + 1;
-            if (cisloRady === 1) return; 
             for (let i = 1; i <= pocetZidli; i++) {
                 if (cisloRady === 8 && i === 4) continue; 
                 const seatId = `${cisloRady}-${i}`;
@@ -316,7 +313,7 @@
         priceText.innerText = cenaCelkem;
     }
 
-    inputPocetStani.oninput = aktualizovatKosik;
+    inputPocetStani.onchange = aktualizovatKosik;
 
     reservationForm.addEventListener('submit', async function(e) {
         e.preventDefault();
