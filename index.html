@@ -61,7 +61,7 @@
         <div class="date-badge">📅 Sobota 20. 6. 2026</div>
         
         <p style="margin: 15px 0 0 0; color: #ea580c; font-size: 14px; font-weight: 600; line-height: 1.4;">
-            💡 Upozornění: Jakmile se vyprodají XML místa k sezení, automaticky se na této stránce spustí prodej lístků na stání. Dostane se na každého!
+            💡 Upozornění: Jakmile se vyprodají všechna místa k sezení, automaticky se na této stránce spustí prodej lístků na stání. Dostane se na každého!
         </p>
     </div>
 
@@ -78,7 +78,7 @@
                 <div class="legend-item"><div class="legend-dot" style="background: #eab308;"></div> Váš výběr</div>
                 <div class="legend-item"><div class="legend-dot" style="background: #f97316;"></div> Čeká na platbu</div>
                 <div class="legend-item"><div class="legend-dot" style="background: #cbd5e1;"></div> Zaplaceno / Obsazeno</div>
-                <div class="legend-item"><div class="legend-dot" style="background: #94a3b8; display: flex; align-items: center; justify-content: center; color: #475569; font-size: 10px; font-weight: bold;">✕</div> Místo pro kameru</div>
+                <div class="legend-item"><div class="legend-dot" style="background: #94a3b8; display: flex; align-items: center; justify-content: center; color: #475569; font-size: 10px; font-weight: bold;">✕</div> Místo pro kamera</div>
             </div>
         </div>
 
@@ -113,7 +113,7 @@
                 <input type="text" id="name" required placeholder="Jan Novák">
             </div>
             <div class="form-group">
-                <label for="email">E-mail:</label>
+                <label interpreter="email" for="email">E-mail:</label>
                 <input type="email" id="email" required placeholder="jan.novak@email.cz">
             </div>
             <div class="summary-box">
@@ -313,7 +313,7 @@
         priceText.innerText = cenaCelkem;
     }
 
-    inputPocetStani.onchange = aktualizovatKosik;
+    inputPocetStani.onchange = () => { aktualizovatKosik(); };
 
     reservationForm.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -353,7 +353,7 @@
             const cisteJmeno = jmeno.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').substring(0, 15);
             const zpravaProPrijemce = `${cisteJmeno}_listky_JOY`;
 
-            const qrText = `SPD*1.0*ACC:${IBAN}*AM:${celkovaCena}.00*CC:CZK*MSG:${zpravaProPrijemce}`;
+            const qrText = `SPD*1.0*ACC:${IBAN}*AM:${celkovaCena}*CC:CZK*MSG:${zpravaProPrijemce}`;
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrText)}`;
             
             document.getElementById('lbl-cena').innerText = celkovaCena;
