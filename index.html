@@ -353,10 +353,11 @@
                 }
             }
 
-            const cisteJmeno = jmeno.normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 20);
-            const zpravaProPrijemce = `${cisteJmeno} listky JOY`;
+            const cisteJmeno = jmeno.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').substring(0, 15);
+            const zpravaProPrijemce = `${cisteJmeno}_listky_JOY`;
 
-            const qrText = `SPD*1.0*ACC:${IBAN}*AM:${celkovaCena}.00*CC:CZK*MSG:${zpravaProPrijemce}`;
+            const qrText = `SPD*1.0*ACC:${IBAN}*AM:${celkovaCena}*CC:CZK*MSG:${zpravaProPrijemce}`;
+
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrText)}`;
             
             document.getElementById('lbl-cena').innerText = celkovaCena;
