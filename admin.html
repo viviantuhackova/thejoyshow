@@ -53,6 +53,13 @@
         <h1>Administrace rezervací sálu</h1>
         <div class="card">
             <h3 style="margin-top:0; margin-bottom:15px; color:#94a3b8; font-size: 16px;">Přehled aktivních objednávek</h3>
+    
+                <div style="display: flex; gap: 15px; background: #0f172a; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; border: 1px solid #334155;">
+                    <div>🪑 Zaplaceno sezení: <strong style="color: #38bdf8;" id="stat-sezeni">0</strong></div>
+                    <div>🚶 Zaplaceno stání: <strong style="color: #f59e0b;" id="stat-stani">0</strong></div>
+                    <div style="border-left: 1px solid #334155; padding-left: 15px; font-weight: bold;">📊 Celkem diváků: <strong style="color: #10b981;" id="stat-celkem">0</strong></div>
+                </div>
+    
             <div id="seznam-rezervaci">Načítám objednávky z databáze...</div>
         </div>
     </div>
@@ -168,6 +175,8 @@
             }
 
             const skupiny = {};
+            let celkemZaplacenoSezeni = 0;
+            let celkemZaplacenoStani = 0;
 
             snapshot.forEach((documentSnapshot) => {
                 const id = documentSnapshot.id;
@@ -201,6 +210,14 @@
                     const radek = parseInt(dily[0]);
                     const misto = parseInt(dily[1]);
                     skupiny[klic].sedadla.push({ id, radek, misto });
+                }
+
+                if (data.status === "zaplaceno") {
+                    if (jeStani) {
+                        celkemZaplacenoStani += (parseInt(data.pocetStani) || 1);
+                    } else {
+                        celkemZaplacenoSezeni += 1;
+                    }
                 }
             });
 
@@ -296,7 +313,11 @@
                 row.appendChild(akce);
                 seznamDiv.appendChild(row);
             });
-
+            
+            document.getElementById('stat-sezeni').innerText = celkemZaplacenoSezeni;
+            document.getElementById('stat-stani').innerText = celkemZaplacenoStani;
+            document.getElementById('stat-celkem').innerText = celkemZaplacenoSezeni + celkemZaplacenoStani;
+            
             if (!nalezenaSkupina) {
                 seznamDiv.innerHTML = "<em>Žádné rezervace v systému.</em>";
             }
