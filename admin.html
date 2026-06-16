@@ -218,7 +218,9 @@
                 let textMistaVmailu = "";
 
                 if (data.jeStani) {
-                    const celkemListku = data.sedadla.reduce((sum, s) => sum + s.pocetStani, 0);
+                    const celkemListku = data.sedadla
+                        .filter(s => s.status === "ceka_na_platbu" || s.status === "zaplaceno")
+                        .reduce((sum, s) => sum + (s.pocetStani || 1), 0);
                     mistoBadge = `<div class="seat-info"><span class="type-label stani-label" style="width:fit-content;">STÁNÍ (${celkemListku}ks)</span><span style="line-height:1.3; font-size:14px; color:#f59e0b;">Vstupenky na stání</span></div>`;
                     textMistaVmailu = `• Vstupenka na stání: ${celkemListku} ks`;
                 } else {
