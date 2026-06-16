@@ -176,7 +176,7 @@
                 const data = documentSnapshot.data();
                 const jeStani = id.startsWith("stani-");
 
-                const klic = `${data.email}_${jeStani ? 'stani' : 'sezeni'}`;
+                const klic = jeStani ? id : `${data.email}_sezeni`;
 
                 if (!skupiny[klic]) {
                     skupiny[klic] = {
